@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PICC CR1 Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/nav.js" defer></script>
+  <script src="js/dashboard.js" defer></script>
+</head>
+<body>
+<nav class="navbar">
+  <div class="logo">PICC CR1</div>
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+  <ul id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="post.html">Post Report</a></li>
+    <li><a href="reports.html">Reports</a></li>
+    <li><a href="dashboard.html" class="active">Dashboard</a></li>
+  </ul>
+</nav>
+
+<main class="container">
+  <h2>Dashboard</h2>
+
+  <!-- Top Cards -->
+  <div class="card-grid">
+    <div class="card" id="totalAttendance">
+      <h3>Total Attendance</h3>
+      <p>Loading...</p>
+    </div>
+    <div class="card" id="totalOfferings">
+      <h3>Total Offerings</h3>
+      <p>Loading...</p>
+    </div>
+    <div class="card" id="totalServices">
+      <h3>Total Services</h3>
+      <p>Loading...</p>
+    </div>
+    <div class="card" id="totalBranches">
+      <h3>Branches Active</h3>
+      <p>Loading...</p>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="card-grid">
+    <div class="card">
+      <h3>Attendance by Service Type</h3>
+      <canvas id="attendanceChart"></canvas>
+    </div>
+    <div class="card">
+      <h3>Offerings Distribution</h3>
+      <canvas id="offeringsChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Latest Reports -->
+  <h3 style="margin-top:40px;">Recent Reports</h3>
+  <div id="recentReports" class="cards-container">
+    <p id="loadingMessage">Loading reports...</p>
+  </div>
+
+</main>
+</body>
+</html>
