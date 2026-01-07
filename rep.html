@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reports</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/nav.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    nav.navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px;
+      background-color: #333;
+      color: #fff;
+    }
+    nav.navbar .logo {
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+    nav.navbar ul {
+      list-style: none;
+      display: flex;
+      gap: 15px;
+      padding: 0;
+      margin: 0;
+    }
+    nav.navbar ul li a {
+      color: #fff;
+      text-decoration: none;
+    }
+    nav.navbar ul li a.active {
+      text-decoration: underline;
+    }
+    .container {
+      padding: 20px;
+    }
+    h2 {
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+      word-wrap: break-word;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+      font-size: 0.9em;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .no-data {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .pdf-button {
+      margin-top: 10px;
+      padding: 8px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    .pdf-button:hover {
+      background-color: #0056b3;
+    }
+    @media(max-width: 768px) {
+      table, th, td {
+        font-size: 0.8em;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="logo">PICC CR1</div>
+  <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+ <ul id="navLinks">
+  <li><a href="index.html">Home</a></li>
+  <li><a href="post.html">Post Report</a></li>
+  <li class="has-submenu">
+    <a href="reports.html" class="active">Reports</a>
+    <ul class="submenu">
+      <li><a href="reports.html" id="viewPDFLink">View</a></li>
+      <li><a href="rep.html" id="downloadPDFLink">Download</a></li>
+    </ul>
+  </li>
+  <li><a href="dashboard.html">Dashboard</a></li>
+</ul>
+</nav>
+
+<main class="container">
+  <h2>Submitted Reports</h2>
+  <button class="pdf-button" onclick="downloadPDF()">Download PDF</button>
+  <div id="reportsContainer">
+    <p class="no-data">Loading reports...</p>
+  </div>
+</main>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby3tGmvmBCkLxMpnfZwJSS6nwVXV2cj2NcBEXlLVLe2PdegU0Enw3R3qHcnzS5GxWdX/exec?action=getReports";
+let reportData = [];
+
+async function fetchReports() {
+  const container = document.getElementById("reportsContainer");
+
+  try {
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+
+    if (!data.reports || data.reports.length === 0) {
+      container.innerHTML = '<p class="no-data">No reports found.</p>';
+      return;
+    }
+
+    reportData = data.reports; // Save globally for PDF
+
+    const table = document.createElement("table");
+    const headers = [
+      "Branch", "Pastor Name", "Service Type", "Custom Service",
+      "M", "F", "H", "FT", "NC", "Total Att", 
+      "FW", "Tithe", "Thanksgiving", "Total Off"
+    ];
+
+    const thead = document.createElement("thead");
+    const trHead = document.createElement("tr");
+    headers.forEach(h => {
+      const th = document.createElement("th");
+      th.textContent = h;
+      trHead.appendChild(th);
+    });
+    thead.appendChild(trHead);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    data.reports.forEach(r => {
+      const tr = document.createElement("tr");
+      const cells = [
+        r.branch,
+        r.pastorName,
+        r.serviceType,
+        r.customServiceName || "-",
+        r.attendanceMale,
+        r.attendanceFemale,
+        r.attendanceHeritage,
+        r.attendanceFirstTimers,
+        r.attendanceNewConverts,
+        r.attendanceTotal,
+        r.offeringFreeWill,
+        r.offeringTithe,
+        r.offeringThanksgiving,
+        r.offeringTotal
+      ];
+      cells.forEach(c => {
+        const td = document.createElement("td");
+        td.textContent = c;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    container.innerHTML = "";
+    container.appendChild(table);
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = '<p class="no-data">Failed to load reports. Check console.</p>';
+  }
+}
+
+function downloadPDF() {
+  if (!reportData.length) return alert("No data to download.");
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l", "pt", "a4"); // landscape orientation
+  const headers = [
+    "Branch", "Pastor Name", "Service Type", "Custom Service",
+    "M", "F", "H", "FT", "NC", "Total Att", 
+    "FW", "Tithe", "Thanksgiving", "Total Off"
+  ];
+
+  const rows = reportData.map(r => [
+    r.branch,
+    r.pastorName,
+    r.serviceType,
+    r.customServiceName || "-",
+    r.attendanceMale,
+    r.attendanceFemale,
+    r.attendanceHeritage,
+    r.attendanceFirstTimers,
+    r.attendanceNewConverts,
+    r.attendanceTotal,
+    r.offeringFreeWill,
+    r.offeringTithe,
+    r.offeringThanksgiving,
+    r.offeringTotal
+  ]);
+
+  doc.autoTable({
+    head: [headers],
+    body: rows,
+    startY: 20,
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [22, 160, 133] },
+    theme: 'grid'
+  });
+
+  doc.save("Reports.pdf");
+}
+
+document.addEventListener("DOMContentLoaded", fetchReports);
+</script>
+
+</body>
+</html>
