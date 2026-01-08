@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reports</title>
+
+<!-- CSS -->
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+body { margin:0; font-family: Arial, sans-serif; }
+nav.navbar { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#333; color:#fff; }
+nav.navbar .logo { font-weight:bold; font-size:1.2em; }
+nav.navbar ul { list-style:none; display:flex; gap:15px; padding:0; margin:0; }
+nav.navbar ul li a { color:#fff; text-decoration:none; }
+nav.navbar ul li a.active { text-decoration:underline; }
+
+.container { padding:20px; }
+h2 { margin-bottom:10px; }
+
+/* Controls row */
+.controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:15px; justify-content:center; }
+.controls button { padding:6px 12px; cursor:pointer; border-radius:4px; border:none; }
+.controls button.active { background:#0056b3; color:#fff; }
+.controls button.pdf { background:#28a745; color:#fff; }
+.controls button.pdf:hover { background:#218838; }
+.controls button.reset { background:#dc3545; color:#fff; }
+.controls button.reset:hover { background:#c82333; }
+.controls button:not(.active):not(.pdf):not(.reset) { background:#007bff; color:#fff; }
+.controls button:hover:not(.active):not(.pdf):not(.reset) { background:#0056b3; }
+
+/* Filters row */
+.filters { display:flex; flex-wrap:wrap; justify-content:center; gap:15px; margin-bottom:20px; align-items:center; }
+.filters label { font-weight:bold; }
+.filters input, .filters select { padding:5px 10px; border-radius:5px; border:1px solid #ccc; }
+
+/* Cards Styles */
+.cards-container { display:flex; flex-wrap:wrap; gap:15px; }
+.report-card { border-radius:8px; padding:10px; width:250px; box-shadow:0 2px 5px rgba(0,0,0,0.1); font-size:0.85em; }
+.report-card.thursday { background:#ffe6e6; }
+.report-card.sunday { background:#e6f7ff; }
+.report-card.other { background:#f9f9f9; }
+.report-card .line-1 { font-weight:bold; margin-bottom:4px; }
+.report-card .line-2 { font-style:italic; margin-bottom:4px; }
+.report-card .attendance, .report-card .offerings { margin-bottom:4px; }
+.report-card img { width:100%; margin-top:5px; border-radius:4px; }
+
+/* Table Styles */
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+th, td { border:1px solid #ccc; padding:6px; text-align:center; font-size:0.85em; }
+th { background:#f4f4f4; }
+
+.no-data { text-align:center; font-weight:bold; margin-top:20px; color:#555; }
+
+@media(max-width:768px) {
+  table, th, td, .report-card { font-size:0.75em; }
+  .report-card { width:100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Navbar Placeholder -->
+<div id="nav-placeholder"></div>
+
+<main class="container">
+  <h2>Submitted Reports</h2>
+
+  <!-- Controls row -->
+  <div class="controls">
+    <button id="cardsViewBtn" class="active" onclick="switchView('cards')">Cards View</button>
+    <button id="tableViewBtn" onclick="switchView('table')">Table View</button>
+    <button class="pdf" onclick="downloadPDF()">Download PDF</button>
+    <button class="reset" id="resetFilters">Reset Filters</button>
+  </div>
+
+  <!-- Filters row -->
+  <div class="filters">
+    <label>Branch: <select id="branchSelect"><option value="">All</option></select></label>
+    <label>Month: <select id="monthSelect"><option value="">All</option></select></label>
+    <label>From: <input type="date" id="dateFrom"></label>
+    <label>To: <input type="date" id="dateTo"></label>
+  </div>
+
+  <div id="reportsContainer">
+    <p class="no-data">Loading reports...</p>
+  </div>
+</main>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby3tGmvmBCkLxMpnfZwJSS6nwVXV2cj2NcBEXlLVLe2PdegU0Enw3R3qHcnzS5GxWdX/exec?action=getReports";
+let reportData = [];
+let currentView = 'cards';
+
+function n(val){ return Number(val)||0; }
+function formatDate(dateStr){ 
+  if(!dateStr) return '-';
+  const d = new Date(dateStr);
+  if(isNaN(d)) return '-';
+  return `${('0'+d.getDate()).slice(-2)}-${('0'+(d.getMonth()+1)).slice(-2)}-${d.getFullYear()}`;
+}
+
+// ---------- Navbar Load + Toggle + Active Link ----------
+fetch('nav.html')
+  .then(response => response.text())
+  .then(html => {
+    document.getElementById('nav-placeholder').innerHTML = html;
+
+    // Toggle menu
+    const toggleBtn = document.querySelector('.menu-toggle');
+    toggleBtn?.addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('show');
+    });
+
+    // Active link
+    const links = document.querySelectorAll("#navLinks a");
+    const current = window.location.pathname.split("/").pop().toLowerCase();
+    links.forEach(link => {
+      const href = link.getAttribute("href").toLowerCase();
+      if (href === current || (href === "index.html" && current === "")) {
+        link.classList.add("active");
+      } else {
+        link.classList.remove("active");
+      }
+    });
+  })
+  .catch(err => console.error("Failed to load navbar:", err));
+
+// ---------- Reports Functions ----------
+async function fetchReports() {
+  try {
+    const res = await fetch(WEB_APP_URL);
+    const data = await res.json();
+    if(!data.reports || data.reports.length===0){
+      document.getElementById("reportsContainer").innerHTML = '<p class="no-data">No reports found.</p>';
+      return;
+    }
+    reportData = data.reports;
+    initFilters();
+    renderView();
+  } catch(err){
+    console.error(err);
+    document.getElementById("reportsContainer").innerHTML = '<p class="no-data">Failed to load reports. Check console.</p>';
+  }
+}
+
+function initFilters(){
+  const branchSet = new Set(reportData.map(r=>r.branch));
+  const branchSelect = document.getElementById('branchSelect');
+  branchSelect.innerHTML = '<option value="">All</option>';
+  branchSet.forEach(b=>branchSelect.innerHTML += `<option value="${b}">${b}</option>`);
+
+  const monthNames = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const monthSelect = document.getElementById('monthSelect');
+  monthSelect.innerHTML = '<option value="">All</option>';
+  monthNames.forEach((m,idx)=>monthSelect.innerHTML += `<option value="${idx+1}">${m}</option>`);
+}
+
+function filterReports() {
+  const branch = document.getElementById('branchSelect').value;
+  const month = document.getElementById('monthSelect').value;
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+
+  return reportData.filter(r=>{
+    let keep=true;
+    if(branch) keep = keep && r.branch===branch;
+    const serviceDate = new Date(r.serviceDate);
+    if(from && to) keep = keep && serviceDate >= new Date(from) && serviceDate <= new Date(to);
+    else if(month) keep = keep && serviceDate.getMonth()+1 === Number(month);
+    return keep;
+  });
+}
+
+function renderView(){
+  const container = document.getElementById("reportsContainer");
+  container.innerHTML = "";
+  const filtered = filterReports();
+  if(!filtered.length){ container.innerHTML='<p class="no-data">No reports found.</p>'; return; }
+
+  if(currentView==='cards'){
+    const cardsDiv = document.createElement("div");
+    cardsDiv.className = "cards-container";
+    filtered.forEach(report=>{
+      let serviceClass='other';
+      if(report.serviceType){
+        const t=report.serviceType.toLowerCase();
+        if(t.includes('thursday')) serviceClass='thursday';
+        else if(t.includes('sunday')) serviceClass='sunday';
+      }
+      const card = document.createElement("div");
+      card.className = `report-card ${serviceClass}`;
+      card.innerHTML = `
+        <div class="line-1">${report.branch||'—'} — ${report.pastorName||'—'}</div>
+        <div class="line-2">${report.serviceType||'Service'}${report.customServiceName?` (${report.customServiceName})`:''} • ${formatDate(report.serviceDate)}</div>
+        <div class="attendance"><strong>Att:</strong> M:${n(report.attendanceMale)} F:${n(report.attendanceFemale)} H:${n(report.attendanceHeritage)} FT:${n(report.attendanceFirstTimers)} NC:${n(report.attendanceNewConverts)} | <strong>Total:</strong> ${n(report.attendanceTotal)}</div>
+        <div class="offerings"><strong>Off:</strong> FW:${n(report.offeringFreeWill)} T:${n(report.offeringTithe)} TG:${n(report.offeringThanksgiving)} | <strong>Total:</strong> ${n(report.offeringTotal)}</div>
+        ${report.evidenceURL?`<img src="${report.evidenceURL}" alt="Evidence">`:''}
+      `;
+      cardsDiv.appendChild(card);
+    });
+    container.appendChild(cardsDiv);
+  } else {
+    const table = document.createElement("table");
+    const headers = ["Branch","Pastor Name","Service Type","Custom Service","Service Date","M","F","H","FT","NC","Total Att","FW","Tithe","Thanksgiving","Total Off"];
+    const thead = document.createElement("thead");
+    const trHead = document.createElement("tr");
+    headers.forEach(h=>{ const th=document.createElement("th"); th.textContent=h; trHead.appendChild(th); });
+    thead.appendChild(trHead);
+    table.appendChild(thead);
+    const tbody = document.createElement("tbody");
+    filtered.forEach(r=>{
+      const tr = document.createElement("tr");
+      const cells = [
+        r.branch,r.pastorName,r.serviceType,r.customServiceName||"-",
+        formatDate(r.serviceDate),
+        r.attendanceMale,r.attendanceFemale,r.attendanceHeritage,r.attendanceFirstTimers,r.attendanceNewConverts,r.attendanceTotal,
+        r.offeringFreeWill,r.offeringTithe,r.offeringThanksgiving,r.offeringTotal
+      ];
+      cells.forEach(c=>{ const td=document.createElement("td"); td.textContent=c; tr.appendChild(td); });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    container.appendChild(table);
+  }
+}
+
+function switchView(view){
+  currentView=view;
+  document.getElementById("cardsViewBtn").classList.toggle("active",view==='cards');
+  document.getElementById("tableViewBtn").classList.toggle("active",view==='table');
+  renderView();
+}
+
+function downloadPDF(){
+  const filtered = filterReports();
+  if(!filtered.length) return alert("No data to download.");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("l","pt","a4");
+  const headers = ["Branch","Pastor Name","Service Type","Custom Service","Service Date","M","F","H","FT","NC","Total Att","FW","Tithe","Thanksgiving","Total Off"];
+  const rows = filtered.map(r=>[
+    r.branch,r.pastorName,r.serviceType,r.customServiceName||"-",
+    formatDate(r.serviceDate),
+    r.attendanceMale,r.attendanceFemale,r.attendanceHeritage,r.attendanceFirstTimers,r.attendanceNewConverts,r.attendanceTotal,
+    r.offeringFreeWill,r.offeringTithe,r.offeringThanksgiving,r.offeringTotal
+  ]);
+  doc.autoTable({ head:[headers], body:rows, startY:20, styles:{ fontSize:8 }, headStyles:{ fillColor:[22,160,133] }, theme:'grid' });
+  doc.save("Reports.pdf");
+}
+
+document.getElementById('resetFilters').addEventListener('click',()=>{
+  document.getElementById('branchSelect').value="";
+  document.getElementById('monthSelect').value="";
+  document.getElementById('dateFrom').value="";
+  document.getElementById('dateTo').value="";
+  renderView();
+});
+
+['branchSelect','monthSelect','dateFrom','dateTo'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderView);
+});
+
+document.addEventListener("DOMContentLoaded", fetchReports);
+</script>
+
+</body>
+</html>
