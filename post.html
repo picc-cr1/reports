@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post Service Report | PICC CR1</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/nav.js" defer></script>
+  <script src="js/post.js" defer></script>
+</head>
+<body>
+
+<!-- =========================
+     NAVBAR
+========================= -->
+<div id="nav-placeholder"></div>
+
+<script>
+fetch('nav.html')
+  .then(response => response.text())
+  .then(html => {
+    document.getElementById('nav-placeholder').innerHTML = html;
+  });
+</script>
+
+
+<!-- =========================
+     MAIN CONTENT
+========================= -->
+<main class="container">
+
+  <div class="hero">
+    <h1>Post Service Report</h1>
+    <p>
+      Please complete this form accurately after each service.
+      Attendance totals and offerings will be calculated automatically.
+    </p>
+  </div>
+
+  <form id="reportForm">
+
+    <!-- =========================
+         PASTOR & SERVICE
+    ========================= -->
+    <div class="form-section">
+      <h3>Pastor & Service Details</h3>
+
+      <label for="pastorName">Pastor Name</label>
+      <input
+        type="text"
+        id="pastorName"
+        placeholder="Enter pastor's full name"
+        required
+      >
+
+      <label for="branch">Branch</label>
+      <select id="branch" required>
+        <option value="">Select Branch</option>
+        <option>Ntcheu</option>
+        <option>Salima</option>
+        <option>Mtakataka</option>
+        <option>Bilira</option>
+        <option>Dedza</option>
+        <option>Njewa</option>
+        <option>Mitundu</option>
+        <option>Mchezi</option>
+        <option>Area 25</option>
+        <option>Hope Tabernacle</option>
+        <option>Area 23</option>
+        <option>Old Town</option>
+        <option>Area 18</option>
+        <option>Area 56</option>
+      </select>
+
+      <label for="serviceType">Service Type</label>
+      <select id="serviceType" onchange="toggleCustomService()" required>
+        <option value="">Select Service</option>
+        <option value="Thursday">Thursday Service</option>
+        <option value="Sunday">Sunday Service</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <div id="customServiceBox" style="display:none;">
+        <label for="customServiceName">Custom Service Name</label>
+        <input
+          type="text"
+          id="customServiceName"
+          placeholder="e.g. Crusade, Conference"
+        >
+      </div>
+
+      <label for="serviceDate">Service Date</label>
+      <input type="date" id="serviceDate" required>
+    </div>
+
+    <!-- =========================
+         ATTENDANCE
+    ========================= -->
+    <div class="form-section">
+      <h3>Attendance</h3>
+
+      <label for="male">Male</label>
+      <input type="number" id="male" min="0" value="0">
+
+      <label for="female">Female</label>
+      <input type="number" id="female" min="0" value="0">
+
+      <label for="heritage">Heritage</label>
+      <input type="number" id="heritage" min="0" value="0">
+
+      <label for="firstTimers">First Timers</label>
+      <input type="number" id="firstTimers" min="0" value="0">
+
+      <label for="newConverts">New Converts (already counted)</label>
+      <input type="number" id="newConverts" min="0" value="0">
+
+      <label for="attendanceTotal">Total Attendance</label>
+      <input type="number" id="attendanceTotal" readonly>
+    </div>
+
+    <!-- =========================
+         OFFERINGS
+    ========================= -->
+    <div class="form-section">
+      <h3>Offerings</h3>
+
+      <label for="freeWill">Free Will Offering</label>
+      <input type="number" id="freeWill" min="0" value="0">
+
+      <label for="tithe">Tithe</label>
+      <input type="number" id="tithe" min="0" value="0">
+
+      <label for="thanksgiving">Thanksgiving</label>
+      <input type="number" id="thanksgiving" min="0" value="0">
+
+      <label for="offeringTotal">Total Offering</label>
+      <input type="number" id="offeringTotal" readonly>
+    </div>
+
+    <!-- =========================
+         EVIDENCE
+    ========================= -->
+    <div class="form-section">
+      <h3>Evidence (Optional)</h3>
+
+      <label for="evidenceImage">Upload Service Image</label>
+      <input type="file" id="evidenceImage" accept="image/*">
+      <small>Optional but recommended for verification</small>
+    </div>
+
+    <!-- =========================
+         SUBMIT
+    ========================= -->
+    <button type="submit" class="submit-btn">
+      Submit Report
+    </button>
+
+    <p id="statusMessage"></p>
+
+  </form>
+</main>
+
+</body>
+</html>
