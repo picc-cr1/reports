@@ -1,1 +1,199 @@
-hie
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PICC CENTRAL REGION 1 | COMMAND CENTER</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --neon-green: #00ff9d;
+            --dark-bg: #050a0a;
+            --grid-color: rgba(0, 255, 157, 0.1);
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark-bg);
+            color: var(--neon-green);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Perspective Grid Floor */
+        .grid-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            perspective: 500px;
+            z-index: 0;
+        }
+
+        .grid {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(60deg);
+            animation: moveGrid 5s linear infinite;
+        }
+
+        @keyframes moveGrid {
+            0% { transform: rotateX(60deg) translateY(0); }
+            100% { transform: rotateX(60deg) translateY(50px); }
+        }
+
+        /* Scanning Line */
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background: rgba(0, 255, 157, 0.1);
+            box-shadow: 0 0 15px var(--neon-green);
+            animation: scan 4s linear infinite;
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { top: -10%; }
+            100% { top: 110%; }
+        }
+
+        /* Content Hub */
+        .hub {
+            position: relative;
+            z-index: 3;
+            text-align: center;
+            padding: 40px;
+            border: 2px solid var(--neon-green);
+            background: rgba(0, 15, 10, 0.8);
+            box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.3), 0 0 30px rgba(0, 255, 157, 0.2);
+            clip-path: polygon(0 15%, 15% 0, 100% 0, 100% 85%, 85% 100%, 0 100%);
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin: 0;
+            letter-spacing: 8px;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        .sub-header {
+            font-size: 1rem;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+            opacity: 0.8;
+        }
+
+        .data-stream {
+            font-size: 0.9rem;
+            height: 20px;
+            margin-bottom: 30px;
+            color: #fff;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(0, 255, 157, 0.2);
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-progress {
+            position: absolute;
+            height: 100%;
+            width: 50%;
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green);
+            animation: load 2s ease-in-out infinite;
+        }
+
+        @keyframes load {
+            0% { left: -50%; }
+            100% { left: 100%; }
+        }
+
+        .coords {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            margin-top: 20px;
+            opacity: 0.5;
+        }
+
+        /* Flickering Effect */
+        .flicker {
+            animation: textFlicker 0.1s infinite;
+        }
+
+        @keyframes textFlicker {
+            0% { opacity: 0.95; }
+            50% { opacity: 1; }
+            100% { opacity: 0.9; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="grid-container"><div class="grid"></div></div>
+    <div class="scanline"></div>
+
+    <div class="hub flicker">
+        <div class="sub-header">SYSTEM STATUS: ENCRYPTING DATA</div>
+        <h1>PICC CENTRAL REGION 1</h1>
+        <div class="data-stream" id="typewriter"></div>
+        
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+        </div>
+
+        <div class="sub-header" style="color: #fff;">UPGRADING REPORTING INFRASTRUCTURE</div>
+
+        <div class="coords">
+            <span>LOC: CENTRAL_REGION_01</span>
+            <span>SEC_LEVEL: ALPHA</span>
+            <span>EST_ESTABLISHMENT: 2026</span>
+        </div>
+    </div>
+
+    <script>
+        const text = ">> RESTRUCTURING DATABASE... >> OPTIMIZING NODES... >> UPLOADING INTERFACE... >> ACCESS DENIED: UNDER CONSTRUCTION <<";
+        let i = 0;
+        const speed = 50;
+
+        function typeWriter() {
+            if (i < text.length) {
+                document.getElementById("typewriter").innerHTML += text.charAt(i);
+                i++;
+                setTimeout(typeWriter, speed);
+            } else {
+                setTimeout(() => {
+                    document.getElementById("typewriter").innerHTML = "";
+                    i = 0;
+                    typeWriter();
+                }, 3000);
+            }
+        }
+
+        window.onload = typeWriter;
+    </script>
+</body>
+</html>
