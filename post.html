@@ -1,187 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Post Service Report | PICC CR1</title>
-
-  <link rel="stylesheet" href="css/style.css">
-  <script src="js/nav.js" defer></script>
-  <script src="js/post.js" defer></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Post Service Report | PICC CR1</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #e5e7eb;
+  --radius: 16px;
+  --shadow-sm: 0 4px 10px rgba(0,0,0,.05);
+  --shadow-md: 0 20px 40px rgba(0,0,0,.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+input, select, textarea { width: 100%; font-size: 0.95rem; }
+.container { max-width: 1080px; margin: 40px auto; padding: 0 20px; }
+.hero {
+  background: radial-gradient(1200px 500px at top right, rgba(99,102,241,0.15), transparent 60%), var(--surface);
+  border-radius: var(--radius);
+  padding: 50px 30px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+.hero h1 { font-size: 2rem; font-weight: 700; color: #2980b9; margin-bottom: 15px; }
+.hero p { font-size: 1.05rem; color: var(--muted); max-width: 700px; margin: 0 auto 2rem; }
+.form-card { background: var(--surface); padding: 30px; border-radius: 18px; box-shadow: var(--shadow-md); }
+.form-section { background: var(--surface); padding: 20px 25px; margin-bottom: 1.5rem; border-radius: 14px; box-shadow: var(--shadow-sm); }
+.form-section h3 { margin-bottom: 1rem; color: #2980b9; font-weight: 600; }
+label { display: block; margin-bottom: 6px; font-weight: 500; }
+input, select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; transition: 0.2s; }
+input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+.form-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+@media(min-width:768px){ .form-grid { grid-template-columns: repeat(2,1fr); } }
+.submit-btn {
+  display: inline-block; width: 100%; padding: 14px 20px; font-weight: 600; border-radius: 999px;
+  background: linear-gradient(135deg,var(--primary),var(--primary-dark));
+  color: #fff; border: none; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+}
+.submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99,102,241,0.35); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+</style>
 </head>
 <body>
 
-<!-- =========================
-     NAVBAR
-========================= -->
-<!-- Navbar Placeholder -->
+<!-- NAVBAR -->
 <div id="nav-placeholder"></div>
 
-<!-- Navbar Loader & JS -->
 <script>
 fetch('nav.html')
-  .then(response => response.text())
-  .then(html => {
-    document.getElementById('nav-placeholder').innerHTML = html;
+.then(res => res.text())
+.then(html => {
+  const navContainer = document.getElementById('nav-placeholder');
+  navContainer.innerHTML = html;
+  const toggleBtn = navContainer.querySelector('.plug-nav__toggle');
+  const links = navContainer.querySelector('.plug-nav__links');
+  if (toggleBtn && links) toggleBtn.addEventListener('click', () => links.classList.toggle('show'));
 
-    // ---------- Toggle Menu ----------
-    const toggleBtn = document.querySelector('.menu-toggle');
-    toggleBtn?.addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('show');
-    });
-
-    // ---------- Active Link Highlight ----------
-    const links = document.querySelectorAll("#navLinks a");
-    const current = window.location.pathname.split("/").pop().toLowerCase();
-    links.forEach(link => {
-      const href = link.getAttribute("href").toLowerCase();
-      // For home page, index.html or empty path
-      if (href === current || (href === "index.html" && current === "")) {
-        link.classList.add("active");
-      } else {
-        link.classList.remove("active");
-      }
-    });
-  })
-  .catch(err => console.error("Failed to load navbar:", err));
+  const navLinks = navContainer.querySelectorAll('.plug-nav__links a');
+  const currentPage = window.location.pathname.split('/').pop().toLowerCase();
+  navLinks.forEach(link => {
+    const href = link.getAttribute('href').toLowerCase();
+    if (href === currentPage || (href === 'index.html' && currentPage === '')) link.classList.add('active');
+    else link.classList.remove('active');
+  });
+})
+.catch(err => console.error('Failed to load navbar:', err));
 </script>
 
-
-<!-- =========================
-     MAIN CONTENT
-========================= -->
 <main class="container">
 
-  <div class="hero">
-    <h1>Post Service Report</h1>
-    <p>
-      Please complete this form accurately after each service.
-      Attendance totals and offerings will be calculated automatically.
-    </p>
+<section class="hero">
+<h1>Post Service Report</h1>
+<p>Submit attendance, offerings, and service details accurately after each service.</p>
+</section>
+
+<div class="form-card">
+<form id="reportForm">
+
+<!-- PASTOR & SERVICE -->
+<div class="form-section form-grid">
+  <div>
+    <label for="pastorName">Pastor Name</label>
+    <input type="text" id="pastorName" placeholder="Enter pastor's name" required>
   </div>
+  <div>
+    <label for="branch">Branch</label>
+    <select id="branch" required>
+      <option value="">Select Branch</option>
+      <option value="Ntcheu">Ntcheu</option>
+      <option value="Salima">Salima</option>
+      <option value="Mtakataka">Mtakataka</option>
+      <option value="Bilira">Bilira</option>
+      <option value="Dedza">Dedza</option>
+      <option value="Njewa">Njewa</option>
+      <option value="Mitundu">Mitundu</option>
+      <option value="Mchezi">Mchezi</option>
+      <option value="Area 25">Area 25</option>
+      <option value="Hope Tabernacle">Hope Tabernacle</option>
+      <option value="Area 23">Area 23</option>
+      <option value="Old Town">Old Town</option>
+      <option value="Area 18">Area 18</option>
+      <option value="Area 56">Area 56</option>
+    </select>
+  </div>
+  <div>
+    <label for="serviceType">Service Type</label>
+    <select id="serviceType" onchange="toggleCustomService()" required>
+      <option value="">Select Service</option>
+      <option value="Thursday">Thursday Service</option>
+      <option value="Sunday">Sunday Service</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+  <div id="customServiceBox" style="display:none;">
+    <label for="customServiceName">Custom Service Name</label>
+    <input type="text" id="customServiceName" placeholder="e.g. Crusade, Conference">
+  </div>
+  <div>
+    <label for="serviceDate">Service Date</label>
+    <input type="date" id="serviceDate" required>
+  </div>
+</div>
 
-  <form id="reportForm">
+<!-- ATTENDANCE -->
+<div class="form-section form-grid">
+  <div><label for="male">Male</label><input type="number" id="male" min="0" value="0"></div>
+  <div><label for="female">Female</label><input type="number" id="female" min="0" value="0"></div>
+  <div><label for="heritage">Heritage</label><input type="number" id="heritage" min="0" value="0"></div>
+  <div><label for="firstTimers">First Timers</label><input type="number" id="firstTimers" min="0" value="0"></div>
+  <div><label for="newConverts">New Converts</label><input type="number" id="newConverts" min="0" value="0"></div>
+  <div><label for="attendanceTotal">Total Attendance</label><input type="number" id="attendanceTotal" readonly></div>
+</div>
 
-    <!-- =========================
-         PASTOR & SERVICE
-    ========================= -->
-    <div class="form-section">
-      <h3>Pastor & Service Details</h3>
+<!-- OFFERINGS -->
+<div class="form-section form-grid">
+  <div><label for="freeWill">Free Will Offering</label><input type="number" id="freeWill" min="0" value="0"></div>
+  <div><label for="tithe">Tithe</label><input type="number" id="tithe" min="0" value="0"></div>
+  <div><label for="thanksgiving">Thanksgiving</label><input type="number" id="thanksgiving" min="0" value="0"></div>
+  <div><label for="offeringTotal">Total Offering</label><input type="number" id="offeringTotal" readonly></div>
+</div>
 
-      <label for="pastorName">Pastor Name</label>
-      <input
-        type="text"
-        id="pastorName"
-        placeholder="Enter pastor's full name"
-        required
-      >
+<button type="submit" class="submit-btn">Submit Report</button>
+</form>
+</div>
 
-      <label for="branch">Branch</label>
-      <select id="branch" required>
-        <option value="">Select Branch</option>
-        <option>Ntcheu</option>
-        <option>Salima</option>
-        <option>Mtakataka</option>
-        <option>Bilira</option>
-        <option>Dedza</option>
-        <option>Njewa</option>
-        <option>Mitundu</option>
-        <option>Mchezi</option>
-        <option>Area 25</option>
-        <option>Hope Tabernacle</option>
-        <option>Area 23</option>
-        <option>Old Town</option>
-        <option>Area 18</option>
-        <option>Area 56</option>
-      </select>
-
-      <label for="serviceType">Service Type</label>
-      <select id="serviceType" onchange="toggleCustomService()" required>
-        <option value="">Select Service</option>
-        <option value="Thursday">Thursday Service</option>
-        <option value="Sunday">Sunday Service</option>
-        <option value="Other">Other</option>
-      </select>
-
-      <div id="customServiceBox" style="display:none;">
-        <label for="customServiceName">Custom Service Name</label>
-        <input
-          type="text"
-          id="customServiceName"
-          placeholder="e.g. Crusade, Conference"
-        >
-      </div>
-
-      <label for="serviceDate">Service Date</label>
-      <input type="date" id="serviceDate" required>
-    </div>
-
-    <!-- =========================
-         ATTENDANCE
-    ========================= -->
-    <div class="form-section">
-      <h3>Attendance</h3>
-
-      <label for="male">Male</label>
-      <input type="number" id="male" min="0" value="0">
-
-      <label for="female">Female</label>
-      <input type="number" id="female" min="0" value="0">
-
-      <label for="heritage">Heritage</label>
-      <input type="number" id="heritage" min="0" value="0">
-
-      <label for="firstTimers">First Timers</label>
-      <input type="number" id="firstTimers" min="0" value="0">
-
-      <label for="newConverts">New Converts (already counted)</label>
-      <input type="number" id="newConverts" min="0" value="0">
-
-      <label for="attendanceTotal">Total Attendance</label>
-      <input type="number" id="attendanceTotal" readonly>
-    </div>
-
-    <!-- =========================
-         OFFERINGS
-    ========================= -->
-    <div class="form-section">
-      <h3>Offerings</h3>
-
-      <label for="freeWill">Free Will Offering</label>
-      <input type="number" id="freeWill" min="0" value="0">
-
-      <label for="tithe">Tithe</label>
-      <input type="number" id="tithe" min="0" value="0">
-
-      <label for="thanksgiving">Thanksgiving</label>
-      <input type="number" id="thanksgiving" min="0" value="0">
-
-      <label for="offeringTotal">Total Offering</label>
-      <input type="number" id="offeringTotal" readonly>
-    </div>
-
-    <!-- =========================
-         EVIDENCE
-    ========================= -->
-    <div class="form-section">
-      <h3>Evidence (Optional)</h3>
-
-      <label for="evidenceImage">Upload Service Image</label>
-      <input type="file" id="evidenceImage" accept="image/*">
-      <small>Optional but recommended for verification</small>
-    </div>
-
-    <!-- =========================
-         SUBMIT
-    ========================= -->
-    <button type="submit" class="submit-btn">
-      Submit Report
-    </button>
-
-    <p id="statusMessage"></p>
-
-  </form>
 </main>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby3tGmvmBCkLxMpnfZwJSS6nwVXV2cj2NcBEXlLVLe2PdegU0Enw3R3qHcnzS5GxWdX/exec";
+
+function toggleCustomService() {
+  const val = document.getElementById('serviceType').value;
+  const box = document.getElementById('customServiceBox');
+  const input = document.getElementById('customServiceName');
+  if(val==="Other"){ box.style.display="block"; input.required=true; } 
+  else { box.style.display="none"; input.required=false; input.value=""; }
+}
+
+function num(id){
+  const el = document.getElementById(id);
+  const val = el && el.value ? parseInt(el.value,10) : 0;
+  return isNaN(val) ? 0 : val;
+}
+
+function calculateAttendance(){
+  document.getElementById('attendanceTotal').value =
+    num('male') + num('female') + num('heritage') + num('firstTimers');
+}
+
+function calculateOffering(){
+  document.getElementById('offeringTotal').value =
+    num('freeWill') + num('tithe') + num('thanksgiving');
+}
+
+function toTitleCase(str){
+  return str.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase());
+}
+
+async function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>resolve(reader.result||"");
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  ['male','female','heritage','firstTimers'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', calculateAttendance);
+  });
+  ['freeWill','tithe','thanksgiving'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', calculateOffering);
+  });
+
+  calculateAttendance();
+  calculateOffering();
+
+  const pastorInput = document.getElementById('pastorName');
+  const customInput = document.getElementById('customServiceName');
+  pastorInput.addEventListener('blur', ()=>{ pastorInput.value = toTitleCase(pastorInput.value.trim()); });
+  customInput.addEventListener('blur', ()=>{ customInput.value = toTitleCase(customInput.value.trim()); });
+
+  // Prevent double submission
+  const form = document.getElementById('reportForm');
+  const submitBtn = form.querySelector('.submit-btn');
+  let isSubmitting = false;
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(isSubmitting) return;  // prevent double click
+    isSubmitting = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+
+    try {
+      const payload = {
+        pastorCode: pastorInput.value.trim(),
+        pastorName: pastorInput.value.trim(),
+        branch: document.getElementById('branch').value,
+        serviceType: document.getElementById('serviceType').value,
+        customServiceName: customInput.value.trim(),
+        serviceDate: document.getElementById('serviceDate').value,
+        attendance: {
+          male: num("male"), female: num("female"), heritage: num("heritage"),
+          firstTimers: num("firstTimers"), newConverts: num("newConverts"),
+          total: num("attendanceTotal")
+        },
+        offering: {
+          freeWill: num("freeWill"), tithe: num("tithe"), thanksgiving: num("thanksgiving"),
+          total: num("offeringTotal")
+        }
+      };
+
+      await fetch(WEB_APP_URL,{
+        method:"POST",
+        mode:"no-cors",
+        body: JSON.stringify(payload)
+      });
+
+      alert("✅ Report submitted successfully!");
+      form.reset();
+      toggleCustomService();
+      calculateAttendance();
+      calculateOffering();
+
+    } catch(err){
+      console.error(err);
+      alert("❌ Submission failed. Please check console.");
+    } finally {
+      isSubmitting = false;
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Submit Report";
+    }
+  });
+});
+</script>
 
 </body>
 </html>
